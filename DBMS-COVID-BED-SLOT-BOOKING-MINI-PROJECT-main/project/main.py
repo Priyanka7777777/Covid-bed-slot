@@ -40,7 +40,7 @@ login_manager.login_view='login'
 # app.config['SQLALCHEMY_DATABASE_URI']='mysql://username:password@localhost/databsename'
 app.config['SQLALCHEMY_DATABASE_URI']='mysql://root:@localhost/bedslot'
 db=SQLAlchemy(app)
-
+ 
 
 
 @login_manager.user_loader
@@ -246,43 +246,42 @@ def updatess(code):
     postsdata=Hospitaldata.query.filter_by(hcode=code).first()
     return render_template("hospitaldata.html",postsdata=postsdata)
 
-@app.route("/addhospitalinfo",methods=['POST','GET'])
+
+@app.route("/addhospitalinfo", methods=['POST', 'GET'])
 def addhospitalinfo():
-    email=current_user.email
-    posts=Hospitaluser.query.filter_by(email=email).first()
-    code=posts.hcode
-    postsdata=Hospitaldata.query.filter_by(hcode=code).first()
+    email = current_user.email
+    posts = Hospitaluser.query.filter_by(email=email).first()
 
-    if request.method=="POST":
-        hcode=request.form.get('hcode')
-        hname=request.form.get('hname')
-        nbed=request.form.get('normalbed')
-        hbed=request.form.get('hicubeds')
-        ibed=request.form.get('icubeds')
-        vbed=request.form.get('ventbeds')
-        hcode=hcode.upper()
-        huser=Hospitaluser.query.filter_by(hcode=hcode).first()
-        hduser=Hospitaldata.query.filter_by(hcode=hcode).first()
+    # Initialize postsdata to None
+    postsdata = None
+
+    # Check if posts is None
+    if posts is not None:
+        code = posts.hcode
+        postsdata = Hospitaldata.query.filter_by(hcode=code).first()
+
+    if request.method == "POST":
+        hcode = request.form.get('hcode').upper()
+        hname = request.form.get('hname')
+        nbed = request.form.get('normalbed')
+        hbed = request.form.get('hicubeds')
+        ibed = request.form.get('icubeds')
+        vbed = request.form.get('ventbeds')
+
+        hduser = Hospitaldata.query.filter_by(hcode=hcode).first()
+
         if hduser:
-            flash("Data is already Present you can update it..","primary")
-            return render_template("hospitaldata.html")
-        if huser:            
-            # db.engine.execute(f"INSERT INTO `hospitaldata` (`hcode`,`hname`,`normalbed`,`hicubed`,`icubed`,`vbed`) VALUES ('{hcode}','{hname}','{nbed}','{hbed}','{ibed}','{vbed}')")
-            query=Hospitaldata(hcode=hcode,hname=hname,normalbed=nbed,hicubed=hbed,icubed=ibed,vbed=vbed)
-            db.session.add(query)
-            db.session.commit()
-            flash("Data Is Added","primary")
-            return redirect('/addhospitalinfo')
-            
+            flash("Data is already present. You can update it.", "primary")
+            return render_template("hospitaldata.html", postsdata=postsdata)
 
-        else:
-            flash("Hospital Code not Exist","warning")
-            return redirect('/addhospitalinfo')
+        # Insert new hospital data
+        query = Hospitaldata(hcode=hcode, hname=hname, normalbed=nbed, hicubed=hbed, icubed=ibed, vbed=vbed)
+        db.session.add(query)
+        db.session.commit()
+        flash("Data is added", "primary")
+        return redirect('/addhospitalinfo')
 
-
-
-
-    return render_template("hospitaldata.html",postsdata=postsdata)
+    return render_template("hospitaldata.html", postsdata=postsdata)
 
 
 @app.route("/hedit/<string:id>",methods=['POST','GET'])
